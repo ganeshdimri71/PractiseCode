@@ -1,0 +1,93 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body,
+html {
+    height: 100%;
+    font-family: sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+    /**
+     * Position relative so that canvas elements
+     * inside of it will be relative to the parent
+    */
+    position: relative;
+}
+
+canvas {
+    /* Position absolute provides canvases to be able to be layered on top of each other */
+    position: absolute;
+    /* Set transparent to let any other canvases render through */
+    background-color: transparent;
+}
+
+#interactive-canvas {
+    z-index: -999;
+}
+
+#add-points,
+#tools,
+#last-selected,
+#reset {
+    position: absolute;
+    left: 20px;
+    z-index: 2;
+}
+
+#add-points {
+    top: 20px;
+}
+
+#tools {
+    top: 100px;
+}
+
+#last-selected {
+    top: 200px;
+}
+
+#reset {
+    bottom: 20px;
+}
+
+/* #tools button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    margin-right: 10px;
+} */
+
+#test {
+    position: absolute;
+    left: 20px;
+    top: 200px;
+    z-index: 2;
+}
+
+.button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    margin-right: 10px;
+    text-transform: uppercase;
+}
+
+.selected-button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    margin-right: 10px;
+    text-transform: uppercase;
+    color: #4263eb;
+    font-weight: bold;
+}
+
+.input {
+    padding-left: 4px;
+    line-height: 2.6;
+    margin-right: 10px;
+    width: 60px;
+}
