@@ -79,7 +79,7 @@ export default function App() {
   const onMouseMoveCanvas = useCallback((e) => {
     const context = interactiveCanvasRef.current.getContext("2d");
     if (lastPointDrawn) {
-    //   clearCanvas(interactiveCanvasRef.current);
+      clearCanvas(interactiveCanvasRef.current);
       // just draw the line, not the entire scene
       drawHangingLine(
         context,
