@@ -11,43 +11,6 @@ let lastPointDrawn = null;
 let snappedCursor = null;
 
 // this function allows the user to draw points and lines.
-// function draw(context, position) {
-//   let existingPoint;
-//   // checking first if the position where I want to draw is already occupied by another point
-//   for (const point of Object.values(points)) {
-//     if (isPositionOverPoint(position, point, POINT.RADIUS)) {
-//       existingPoint = point;
-//       break;
-//     }
-//   }
-//   // if it is already occupied then the current point is that one and no other point will be created
-//   // otherwise a new point will be created
-//   let currentPoint;
-//   if (existingPoint) {
-//     currentPoint = existingPoint;
-//   } else {
-//     currentPoint = new Point(newKey(points), position.x, position.y);
-//     addPoint(points, currentPoint);
-//   }
-
-//   // if there is a hangingline and the point I clicked is different from the one I have started from I execute the if
-//   // checking if there is already a line that connects 2 points, if there isn't I create it
-//   const currentLine = new Line(
-//     newKey(lines),
-//     lastPointDrawn.key,
-//     currentPoint.key
-//   );
-//   addLine(lines, currentLine);
-
-//   currentLine.draw(context, points);
-//   // just draw the point, not the entire scene
-//   console.log("currentPoint", currentPoint);
-//   if (!existingPoint) currentPoint.draw(context);
-//   lastPointDrawn = currentPoint;
-//   //   console.log("lastPointDrawn", lastPointDrawn);
-// }
-
-//  this function allows the user to draw points and lines.
 function draw(context, position) {
   let existingPoint;
   // checking first if the position where I want to draw is already occupied by another point
@@ -67,20 +30,69 @@ function draw(context, position) {
     addPoint(points, currentPoint);
   }
 
-  if (lastPointDrawn) {
-    const currentLine = new Line(
-      newKey(lines),
+  // if there is a hangingline and the point I clicked is different from the one I have started from I execute the if
+  if (lastPointDrawn && lastPointDrawn.key !== currentPoint.key) {
+    console.log("currentPoint", currentPoint);
+    console.log("lastPointDrawn", lastPointDrawn);
+    const connectingLinesKeys = getLineKeysThatConnectPoints(
+      lines,
       lastPointDrawn.key,
       currentPoint.key
     );
-    addLine(lines, currentLine);
-    currentLine.draw(context, points);
+    console.log("connectingLinesKeys", connectingLinesKeys);
+    // checking if there is already a line that connects 2 points, if there isn't I create it
+    if (
+      getLineKeysThatConnectPoints(lines, lastPointDrawn.key, currentPoint.key)
+        .length === 0
+    ) {
+      const currentLine = new Line(
+        newKey(lines),
+        lastPointDrawn.key,
+        currentPoint.key
+      );
+      addLine(lines, currentLine);
+      currentLine.draw(context, points);
+    }
   }
-  console.log("currentPoint", currentPoint);
-  console.log("points", points);
-  currentPoint.draw(context);
+  // just draw the point, not the entire scene
+  if (!existingPoint) currentPoint.draw(context);
   lastPointDrawn = currentPoint;
 }
+
+//  this function allows the user to draw points and lines.
+// function draw(context, position) {
+//   let existingPoint;
+//   // checking first if the position where I want to draw is already occupied by another point
+//   for (const point of Object.values(points)) {
+//     if (isPositionOverPoint(position, point, POINT.RADIUS)) {
+//       existingPoint = point;
+//       break;
+//     }
+//   }
+//   // if it is already occupied then the current point is that one and no other point will be created
+//   // otherwise a new point will be created
+//   let currentPoint;
+//   if (existingPoint) {
+//     currentPoint = existingPoint;
+//   } else {
+//     currentPoint = new Point(newKey(points), position.x, position.y);
+//     addPoint(points, currentPoint);
+//   }
+
+//   if (lastPointDrawn) {
+//     const currentLine = new Line(
+//       newKey(lines),
+//       lastPointDrawn.key,
+//       currentPoint.key
+//     );
+//     addLine(lines, currentLine);
+//     currentLine.draw(context, points);
+//   }
+//   console.log("currentPoint", currentPoint);
+//   console.log("points", points);
+//   currentPoint.draw(context);
+//   lastPointDrawn = currentPoint;
+// }
 // just draw the point, not the entire scene
 
 function drawHangingLine(context, x1, y1, x2, y2) {

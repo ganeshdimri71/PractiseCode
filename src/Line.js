@@ -23,6 +23,7 @@ export class Line {
 export function getLineKeysThatConnectPoints(lines, pointKey1, pointKey2) {
   const lineKeys = [];
   for (const line of Object.values(lines)) {
+    console.log("pointKey1 pointKey2", pointKey1, pointKey2);
     if (
       (line.pointKey1 === pointKey1 && line.pointKey2 === pointKey2) ||
       (line.pointKey1 === pointKey2 && line.pointKey2 === pointKey1)
