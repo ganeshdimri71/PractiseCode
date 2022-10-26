@@ -13,6 +13,10 @@ export const LINE = {
     DEFAULT_COLOR: "#666666",
 };
 
+export const GUIDELINE = {
+    DEFAULT_COLOR: "#ff00ff",
+};
+
 export const TOOLS = {
     SELECT: "S",
     DRAW: "D",
