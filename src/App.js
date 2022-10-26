@@ -15,20 +15,20 @@ import {
 let points = {};
 let lines = {};
 let lastPointDrawn = null;
+// this is the snapped cursor, if there is no snap its value will be the value of the cursor
 let snappedCursor = null;
+// this is the snapped point if there is one otherwise the value will be null
+/* remember that the snappedCursor is different from snappedPoint, because the first can happen even without
+   a snapped point, for example it can with the guidelines.
+   so the snappedPoint is a sufficient condition for snappedCursor and snappedCursor is necessary condition for snappedPoint.
+   the logical implication is :  snappedPoint => snappedCursor.
+*/
+let snappedPoint = null;
 
 // this function allows the user to draw points and lines.
 function draw(context, position) {
-    let existingPoint;
-    // checking first if the position where I want to draw is already occupied by another point
-    for (const point of Object.values(points)) {
-        if (isPositionOverPoint(position, point, POINT.RADIUS)) {
-            existingPoint = point;
-            break;
-        }
-    }
-    // if it is already occupied then the current point is that one and no other point will be created
-    // otherwise a new point will be created
+    //if there is a snapped point then start from it
+    let existingPoint = snappedPoint;
     let currentPoint;
     if (existingPoint) {
         currentPoint = existingPoint;
@@ -61,6 +61,7 @@ function draw(context, position) {
     lastPointDrawn = currentPoint;
 }
 
+//this function draws a generic line
 function drawLine(context, x1, y1, x2, y2, color = LINE.DEFAULT_COLOR) {
     context.beginPath();
     context.save();
@@ -72,7 +73,7 @@ function drawLine(context, x1, y1, x2, y2, color = LINE.DEFAULT_COLOR) {
     context.stroke();
     context.restore();
 }
-
+//this function clears the passed canvas
 function clearCanvas(canvas) {
     const context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -103,6 +104,7 @@ export default function App() {
 
     const switchToSTool = useCallback(() => {
         setActiveTool(TOOLS.SELECT);
+        // on switching to S we clear the interactive canvas and we forget about the last point drawn
         clearCanvas(interactiveCanvasRef.current);
         lastPointDrawn = null;
     }, []);
@@ -121,13 +123,6 @@ export default function App() {
         },
         [switchToSTool, switchToDTool]
     );
-
-    useEffect(() => {
-        document.addEventListener("keydown", onKeyDown, false);
-        return () => {
-            document.removeEventListener("keydown", onKeyDown, false);
-        };
-    }, [onKeyDown]);
 
     //this function simulates a user that randomly draws n points and n-1 lines
     const onClickAddNPoints = useCallback(() => {
@@ -158,17 +153,19 @@ export default function App() {
                     );
                     setSelectedPoint(null);
                 }
-                // then select the one the cursor is over (if it is over one)
-                for (const point of Object.values(points)) {
-                    if (
-                        isPositionOverPoint(snappedCursor, point, POINT.RADIUS)
-                    ) {
-                        point.isSelected = true;
-                        point.draw(context, POINT.RADIUS, POINT.SELECTED_COLOR);
-                        setSelectedPoint(point);
-                    }
+                // then select the one the cursor is over
+                // this resumes to the check if there is a snapped point because for now a point gets snapped when we go over it
+                if (snappedPoint) {
+                    snappedPoint.isSelected = true;
+                    snappedPoint.draw(
+                        context,
+                        POINT.RADIUS,
+                        POINT.SELECTED_COLOR
+                    );
+                    setSelectedPoint(snappedPoint);
                 }
             } else {
+                // if we are in draw mode we will draw passing the snapped cursor
                 draw(context, snappedCursor);
             }
         },
@@ -181,25 +178,20 @@ export default function App() {
             x: e.clientX,
             y: e.clientY,
         };
+        // the snappedCursor variable must always keep a value and can be equal to cursor.
         snappedCursor = cursor;
+        // at beginning the snappedPoint must be set to null
+        snappedPoint = null;
+        // these variables will store the guidelines objects
         let xGuideLine;
         let yGuideLine;
-
+        // this for loop will make the snapping and guidelines checks
         for (const point of Object.values(points)) {
+            // if the cursor is in the range given around the x of the point then the y guideline must exist
             if (isPositionInRangeXPoint(cursor, point, POINT.RADIUS)) {
-                // console.log(
-                //     "isPositionInRangeXPoint(cursor, point, POINT.RADIUS)",
-                //     isPositionInRangeXPoint(cursor, point, POINT.RADIUS)
-                // );
-                // console.log(Math.abs(cursor.x - point.x));
-                // console.log(
-                //     "position.x - point.x",
-                //     Math.abs(cursor.x - point.x)
-                // );
-            }
-            if (isPositionInRangeXPoint(cursor, point, POINT.RADIUS)) {
+                // if the guideline doesn't exist yet we must create it
                 if (!yGuideLine) {
-                    // console.log("!yGuideLine", !yGuideLine);
+                    // of course we modify the snapped cursor in order to snap the x position
                     snappedCursor.x = point.x;
                     yGuideLine = {
                         x1: point.x,
@@ -207,26 +199,22 @@ export default function App() {
                         x2: point.x,
                         y2: point.y < cursor.y ? cursor.y : point.y,
                     };
-                    console.log("yGuideLine", yGuideLine);
-                    console.log(
-                        "x1,y1,x2,y2 point.x, point.y",
-                        yGuideLine.x1,
-                        yGuideLine.y1,
-                        yGuideLine.x2,
-                        yGuideLine.y2,
-                        point.x,
-                        point.y
-                    );
                 } else {
+                    // if we find another point that is aligned to the y guideline
                     if (point.x === yGuideLine.x1) {
+                        // we check if his y is out of the range of the guideline
+                        // if it is out of the range his y will become a new extreme of the range
                         if (point.y < yGuideLine.y1) yGuideLine.y1 = point.y;
                         else if (point.y > yGuideLine.y2)
                             yGuideLine.y2 = point.y;
                     }
                 }
             }
+            // if the cursor is in the range given around the y of the point then the x guideline must exist
             if (isPositionInRangeYPoint(cursor, point, POINT.RADIUS)) {
+                // if the guideline doesn't exist yet we must create it
                 if (!xGuideLine) {
+                    // of course we modify the snapped cursor in order to snap the y position
                     snappedCursor.y = point.y;
                     xGuideLine = {
                         x1: point.x < cursor.x ? point.x : cursor.x,
@@ -235,15 +223,20 @@ export default function App() {
                         y2: point.y,
                     };
                 } else {
+                    // if we find another point that is aligned to the x guideline
                     if (point.y === xGuideLine.y1) {
+                        // we check if his x is out of the range of the guideline
+                        // if it is out of the range his x will become a new extreme of the range
                         if (point.x < xGuideLine.x1) xGuideLine.x1 = point.x;
                         else if (point.x > xGuideLine.x2)
                             xGuideLine.x2 = point.x;
                     }
                 }
             }
+            // checks if cursor is over a point, if is over a point that point will be snapped and the snappedCursor will be equal to its position
             if (isPositionOverPoint(cursor, point, POINT.RADIUS)) {
                 snappedCursor = { x: point.x, y: point.y };
+                snappedPoint = point;
             }
         }
 
@@ -289,6 +282,13 @@ export default function App() {
         clearCanvas(baseCanvasRef.current);
         clearCanvas(interactiveCanvasRef.current);
     }, []);
+
+    useEffect(() => {
+        document.addEventListener("keydown", onKeyDown, false);
+        return () => {
+            document.removeEventListener("keydown", onKeyDown, false);
+        };
+    }, [onKeyDown]);
 
     return (
         <>

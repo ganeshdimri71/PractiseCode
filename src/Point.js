@@ -34,10 +34,12 @@ export function newKey(points) {
     return String(key);
 }
 
+// check if the position is in a range r around the x of point
 export function isPositionInRangeXPoint(position, point, r) {
     return Math.abs(position.x - point.x) <= r;
 }
 
+// check if the position is in a range r around the y of point
 export function isPositionInRangeYPoint(position, point, r) {
     return Math.abs(position.y - point.y) <= r;
 }
